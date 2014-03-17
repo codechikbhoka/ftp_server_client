@@ -155,7 +155,7 @@ void ReceiveFile(unsigned int& sockid, string filename)
 
 	if((readn(sockid,(char *)&num_blks,sizeof(num_blks))) < 0)
 	{
-		printf("error: read error on nblocks :%d\n",errno);
+		printf("error: File does not exist !!!\n");
 		exit(0);
 	}
 
@@ -256,7 +256,7 @@ void SendFile(unsigned int& newsd, string filename)
    
     if((fp = fopen(fname,"r")) == NULL) /*cant open file*/
     {
-    	printf("error: client requested for a non existing file :%d\n",errno);
+    	printf("error: client requested for a non existing file !!!!");
     }
 
     fsize = 0;ack = 0;
@@ -322,56 +322,56 @@ int stringTOint(string a)
 }
 
 
-int recvallbinary(unsigned int serverfd, FILE *fd)
-{
-	unsigned char buf[10001];
-	int bytesRead=0;
-	int len=0;
-	while((bytesRead = recv(serverfd,buf,10000,0)) >0)
-	{
-		len+=bytesRead;
-		fwrite(buf,1,bytesRead,fd);
-	}
-	if(bytesRead < 0)
-	{
-		cerr<<"Error Occurred";
-		return -1;
-	}else{
+// int recvallbinary(unsigned int serverfd, FILE *fd)
+// {
+// 	unsigned char buf[10001];
+// 	int bytesRead=0;
+// 	int len=0;
+// 	while((bytesRead = recv(serverfd,buf,10000,0)) >0)
+// 	{
+// 		len+=bytesRead;
+// 		fwrite(buf,1,bytesRead,fd);
+// 	}
+// 	if(bytesRead < 0)
+// 	{
+// 		cerr<<"Error Occurred";
+// 		return -1;
+// 	}else{
  
-		return len;
-	}
-}
+// 		return len;
+// 	}
+// }
  
-int send_all(unsigned int socket,const void *buffer, size_t length) {
-    size_t i = 0;
-    for (i = 0; i < length;){
-    	int bytesSent = send(socket, buffer, length - i,MSG_NOSIGNAL);
-    	if(bytesSent==-1){
-    		return errno;
-    	}else{
-    		i+=bytesSent;
-    	}
-    }
-    return 0;
-}
+// int send_all(unsigned int socket,const void *buffer, size_t length) {
+//     size_t i = 0;
+//     for (i = 0; i < length;){
+//     	int bytesSent = send(socket, buffer, length - i,MSG_NOSIGNAL);
+//     	if(bytesSent==-1){
+//     		return errno;
+//     	}else{
+//     		i+=bytesSent;
+//     	}
+//     }
+//     return 0;
+// }
 
-int sendallbinary(unsigned int serverfd, FILE *fd,int size)
-{
-	unsigned char buf[100001];
-	int bytesSent=0;
-	while(size>0){
-		int bytesRead = fread(buf,1,100000,fd);
-		int stat = send_all(serverfd,buf,bytesRead);
-		if(stat != 0 ){
+// int sendallbinary(unsigned int serverfd, FILE *fd,int size)
+// {
+// 	unsigned char buf[100001];
+// 	int bytesSent=0;
+// 	while(size>0){
+// 		int bytesRead = fread(buf,1,100000,fd);
+// 		int stat = send_all(serverfd,buf,bytesRead);
+// 		if(stat != 0 ){
 
-			cout<<"ERROR IN SENDING"<<endl;
-			cout << strerror(errno) << endl;
-			return -1;
-		}
+// 			cout<<"ERROR IN SENDING"<<endl;
+// 			cout << strerror(errno) << endl;
+// 			return -1;
+// 		}
  
-		size = size - bytesRead;
+// 		size = size - bytesRead;
  
-	}
-	return 0;	
-}
+// 	}
+// 	return 0;	
+// }
 

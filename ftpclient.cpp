@@ -6,25 +6,19 @@ int main(int argc,char *argv[])
 
 
 	unsigned int sockid, newsockid, sockdataid, newdatasd, servlen;
-	int i,ack,msg,getfile,msg_2,c,len,pid2;
-	int no_writen,start_xfer, num_blks,num_last_blk;
+	int i,c;
 	struct sockaddr_in my_addr, server_addr; 
 	FILE *fp; 
 	char *SERVER_HOST_ADDR, *SERVER_CONT_PORT;
 
-
-
 	if(argc != 3) {printf("error: usage : ./ftpclient Server_IP_Address Server_Port\n"); exit(0);}
-	no_writen = 0;
-	num_blks = 0;
-	num_last_blk = 0;
 	SERVER_HOST_ADDR = argv[1];
 	SERVER_CONT_PORT = argv[2];
 
 
-	CreateNewSocket(sockid);
-	int uselessVAR = BindSocketToRandomPort(sockid);
-	ConnectToRemote(sockid, SERVER_HOST_ADDR, atoi(SERVER_CONT_PORT));
+	CreateNewSocket(sockid);  //Create new socket at sockid
+	int uselessVAR = BindSocketToRandomPort(sockid);  // bind socket to a random free port
+	ConnectToRemote(sockid, SERVER_HOST_ADDR, atoi(SERVER_CONT_PORT));  // Connect to server
 
 	
 	while(1)
@@ -32,25 +26,25 @@ int main(int argc,char *argv[])
 
 			cout << "\nftpclient> : " ;
 			string command, filename;
-			cin >> command;			
+			cin >> command;			// get input from keyboard
 
 			if (command == "ls" || command == "pwd")
 		    {
-		    			SendString(sockid,command);
-					    string reply = RecvString(sockid);
+		    			SendString(sockid,command);  // send command to server
+					    string reply = RecvString(sockid);  // receive result from server
 				    	cout << reply << endl;   	
 		    }
 		    else if (command == "!ls" || command == "!pwd")
 		    {
-		    	command.erase(0,1);
-		    	cout << exec(command) << endl;
+		    	command.erase(0,1);  // remove ! from begining
+		    	cout << exec(command) << endl;  //execute command
 		    }
 		    else if (command == "cd")
 		    {
-		    	SendString(sockid,command);
+		    	SendString(sockid,command);  // send command to server
 		    	string nxtDir;
-		    	cin >> nxtDir;
-		    	SendString(sockid,nxtDir);
+		    	cin >> nxtDir;  // get dir to change to
+		    	SendString(sockid,nxtDir);  // send the desired directory to server
 		    }
 		    else if (command == "!cd")
 			{
@@ -59,7 +53,7 @@ int main(int argc,char *argv[])
 				chdir(&nxtDir[0]);
 				cout << "client : directory changed" << endl;
 			}
-		    else if (command == "quit" || command == "exit")
+		    else if (command == "quit")
 		    {
 		    	SendString(sockid,command);
 		    	close(sockid);
@@ -68,35 +62,53 @@ int main(int argc,char *argv[])
 			else if (command ==  "get")
 			{
 				cin >> filename;
-			    SendString(sockid,command);
-			    SendString(sockid,filename);					    
+			    SendString(sockid,command);  // send "get" command to server
+			    SendString(sockid,filename);	// Send filename to server
+			    
+
 		    	CreateNewSocket(sockdataid);
-		    	srand(time(NULL));
-		    	int randport = 40000 + rand()%200;
-		    	string Rand_Port = intTOstring(randport);
+
+		    	srand(time(NULL));                                /*  CREATE    */
+		    	int randport = 40000 + rand()%200;				 /* A RANDOM   */
+		    	string Rand_Port = intTOstring(randport);       /*  PORT      */
+
 		    	BindSocketToLocalPort(sockdataid,randport);
-		    	SendString(sockid,Rand_Port);		    	
-				listen(sockdataid,5);
-				if ((newdatasd = accept(sockdataid ,(struct sockaddr *) &server_addr, &servlen)) < 0){printf("client: accept  error :%d\n", errno); exit(0);}
-		    	FILE* f = fopen(&filename[0],"wb");
-		    	//recvallbinary(newdatasd,f);
+		    	SendString(sockid,Rand_Port);		 // send rand port to server   	
+				listen(sockdataid,5); // start listening
+
+
+				if ((newdatasd = accept(sockdataid ,(struct sockaddr *) &server_addr, &servlen)) < 0)
+				{
+					printf("client: accept  error :%d\n", errno); exit(0);
+				}
+
 		    	ReceiveFile(newdatasd, filename);
 		    	printf("client: FILE TRANSFER COMPLETE\nftpclient> : ");
-				close(newdatasd);
+				close(sockdataid);
 		    }
 		    else if (command ==  "put")
 			{
 				cin >> filename;
-			    SendString(sockid,command);
-			    SendString(sockid,filename);
+			    SendString(sockid,command);  // send "get" command to server
+			    SendString(sockid,filename);	// Send filename to server
+
+
 				CreateNewSocket(sockdataid);
-				srand(time(NULL));
-		    	int randport = 40000 + rand()%200;
-		    	string Rand_Port = intTOstring(randport);
+
+		    	srand(time(NULL));                                /*  CREATE    */
+		    	int randport = 40000 + rand()%200;				 /* A RANDOM   */
+		    	string Rand_Port = intTOstring(randport);       /*  PORT      */
+
 				BindSocketToLocalPort(sockdataid,randport);
-		    	SendString(sockid,Rand_Port);
-				listen(sockdataid,5);
-				if ((newdatasd = accept(sockdataid ,(struct sockaddr *) &server_addr, &servlen)) < 0){printf("client: accept  error :%d\n", errno); exit(0);}
+		    	SendString(sockid,Rand_Port);		 // send rand port to server   	
+				listen(sockdataid,5); // start listening
+
+
+				if ((newdatasd = accept(sockdataid ,(struct sockaddr *) &server_addr, &servlen)) < 0)
+				{
+					printf("client: accept  error :%d\n", errno); exit(0);
+				}
+
 		    	SendFile(newdatasd,filename);
 		    	printf("client: FILE TRANSFER COMPLETE\n");
 				close(sockdataid);			    					    
@@ -113,5 +125,3 @@ int main(int argc,char *argv[])
 
     return 0;
 }
-
-
