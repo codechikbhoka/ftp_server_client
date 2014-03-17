@@ -73,20 +73,22 @@ bool FTP_Session(unsigned int newsd, char* CLIENT_HOST_ADDR)
 	    string filename = RecvString(newsd);
 	    string ClientRandPort_str = RecvString(newsd);
 	    int ClientRandPort_int = stringTOint(ClientRandPort_str);
-	    int sockdataid;
+	    unsigned int sockdataid;
     	CreateNewSocket(sockdataid);
 		int randport = 40000 + rand()%200;
 		BindSocketToLocalPort(sockdataid,randport);
 		cout << CLIENT_HOST_ADDR << " requested file " << filename << endl;
-		cout << "sockdataid  is  "<< sockdataid << endl;
 		ConnectToRemote(sockdataid, CLIENT_HOST_ADDR, ClientRandPort_int);
+		cout << "sockdataid is " << sockdataid << endl;
 
 		FILE* f = fopen(&filename[0],"rb");
 		struct stat st;
 		stat(&filename[0], &st);
 		int size = st.st_size;
-		sendallbinary(sockdataid,f,size);
-		//SendFile(sockdataid, filename);
+		//sendallbinary(sockdataid,f,size);
+
+
+		SendFile(sockdataid, filename);
 		cout << "server: " << filename << " sent to " << CLIENT_HOST_ADDR << endl;
 		close(sockdataid);
 	    
@@ -99,7 +101,8 @@ bool FTP_Session(unsigned int newsd, char* CLIENT_HOST_ADDR)
 		int ClientRandPort_int = stringTOint(ClientRandPort_str);
 		unsigned int sockdataid;
     	CreateNewSocket(sockdataid);
-		int uselessVar = BindSocketToRandomPort(sockdataid);
+    	int randport = 40000 + rand()%200;
+		BindSocketToLocalPort(sockdataid,randport);
 		ConnectToRemote(sockdataid, CLIENT_HOST_ADDR, ClientRandPort_int);
 		ReceiveFile(sockdataid, filename);
 		cout << "server: " << CLIENT_HOST_ADDR << " sent file " << filename << endl;

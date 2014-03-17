@@ -79,10 +79,10 @@ int main(int argc,char *argv[])
 				listen(sockdataid,5);
 				if ((newdatasd = accept(sockdataid ,(struct sockaddr *) &server_addr, &servlen)) < 0){printf("client: accept  error :%d\n", errno); exit(0);}
 		    	FILE* f = fopen(&filename[0],"wb");
-		    	recvallbinary(newdatasd,f);
-		    	//ReceiveFile(newdatasd, filename);
+		    	//recvallbinary(newdatasd,f);
+		    	ReceiveFile(newdatasd, filename);
 		    	printf("client: FILE TRANSFER COMPLETE\nftpclient> : ");
-				close(sockdataid);
+				close(newdatasd);
 		    }
 		    else if (command ==  "put")
 			{
@@ -90,9 +90,10 @@ int main(int argc,char *argv[])
 			    SendString(sockid,command);
 			    SendString(sockid,filename);
 				CreateNewSocket(sockdataid);
-				BindSocketToLocalPort(sockdataid,0);
-				int randport = BindSocketToRandomPort(sockdataid);
+				srand(time(NULL));
+		    	int randport = 40000 + rand()%200;
 		    	string Rand_Port = intTOstring(randport);
+				BindSocketToLocalPort(sockdataid,randport);
 		    	SendString(sockid,Rand_Port);
 				listen(sockdataid,5);
 				if ((newdatasd = accept(sockdataid ,(struct sockaddr *) &server_addr, &servlen)) < 0){printf("client: accept  error :%d\n", errno); exit(0);}

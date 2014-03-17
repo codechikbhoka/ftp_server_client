@@ -322,16 +322,18 @@ int stringTOint(string a)
 }
 
 
-int recvallbinary(int serverfd, FILE *fd)
+int recvallbinary(unsigned int serverfd, FILE *fd)
 {
 	unsigned char buf[10001];
 	int bytesRead=0;
 	int len=0;
-	while((bytesRead = recv(serverfd,buf,10000,0)) >0){
+	while((bytesRead = recv(serverfd,buf,10000,0)) >0)
+	{
 		len+=bytesRead;
 		fwrite(buf,1,bytesRead,fd);
 	}
-	if(bytesRead < 0){
+	if(bytesRead < 0)
+	{
 		cerr<<"Error Occurred";
 		return -1;
 	}else{
@@ -340,7 +342,7 @@ int recvallbinary(int serverfd, FILE *fd)
 	}
 }
  
-int send_all(int socket,const void *buffer, size_t length) {
+int send_all(unsigned int socket,const void *buffer, size_t length) {
     size_t i = 0;
     for (i = 0; i < length;){
     	int bytesSent = send(socket, buffer, length - i,MSG_NOSIGNAL);
@@ -353,7 +355,7 @@ int send_all(int socket,const void *buffer, size_t length) {
     return 0;
 }
 
-int sendallbinary(int serverfd, FILE *fd,int size)
+int sendallbinary(unsigned int serverfd, FILE *fd,int size)
 {
 	unsigned char buf[100001];
 	int bytesSent=0;
