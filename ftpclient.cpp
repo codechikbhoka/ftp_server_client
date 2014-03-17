@@ -10,20 +10,21 @@ int main(int argc,char *argv[])
 	int no_writen,start_xfer, num_blks,num_last_blk;
 	struct sockaddr_in my_addr, server_addr; 
 	FILE *fp; 
-	char* SERVER_HOST_ADDR;
+	char *SERVER_HOST_ADDR, *SERVER_CONT_PORT;
 
 
 
-	if(argc != 2) {printf("error: usage : ./ftpclient Server_IP_Address\n"); exit(0);}
+	if(argc != 3) {printf("error: usage : ./ftpclient Server_IP_Address Server_Port\n"); exit(0);}
 	no_writen = 0;
 	num_blks = 0;
 	num_last_blk = 0;
 	SERVER_HOST_ADDR = argv[1];
+	SERVER_CONT_PORT = argv[2];
 
 
 	CreateNewSocket(sockid);
-	BindSocketToLocalPort(sockid,CLIENT_CONTROL_PORT);
-	ConnectToRemote(sockid, SERVER_HOST_ADDR, SERVER_CONTROL_PORT);
+	int uselessVAR = BindSocketToRandomPort(sockid);
+	ConnectToRemote(sockid, SERVER_HOST_ADDR, atoi(SERVER_CONT_PORT));
 
 	
 	while(1)
@@ -70,10 +71,16 @@ int main(int argc,char *argv[])
 			    SendString(sockid,command);
 			    SendString(sockid,filename);					    
 		    	CreateNewSocket(sockdataid);
-				BindSocketToLocalPort(sockdataid,CLIENT_DATA_PORT);
+		    	srand(time(NULL));
+		    	int randport = 40000 + rand()%200;
+		    	string Rand_Port = intTOstring(randport);
+		    	BindSocketToLocalPort(sockdataid,randport);
+		    	SendString(sockid,Rand_Port);		    	
 				listen(sockdataid,5);
 				if ((newdatasd = accept(sockdataid ,(struct sockaddr *) &server_addr, &servlen)) < 0){printf("client: accept  error :%d\n", errno); exit(0);}
-		    	ReceiveFile(newdatasd, filename);
+		    	FILE* f = fopen(&filename[0],"wb");
+		    	recvallbinary(newdatasd,f);
+		    	//ReceiveFile(newdatasd, filename);
 		    	printf("client: FILE TRANSFER COMPLETE\nftpclient> : ");
 				close(sockdataid);
 		    }
@@ -83,7 +90,10 @@ int main(int argc,char *argv[])
 			    SendString(sockid,command);
 			    SendString(sockid,filename);
 				CreateNewSocket(sockdataid);
-				BindSocketToLocalPort(sockdataid,CLIENT_DATA_PORT);
+				BindSocketToLocalPort(sockdataid,0);
+				int randport = BindSocketToRandomPort(sockdataid);
+		    	string Rand_Port = intTOstring(randport);
+		    	SendString(sockid,Rand_Port);
 				listen(sockdataid,5);
 				if ((newdatasd = accept(sockdataid ,(struct sockaddr *) &server_addr, &servlen)) < 0){printf("client: accept  error :%d\n", errno); exit(0);}
 		    	SendFile(newdatasd,filename);

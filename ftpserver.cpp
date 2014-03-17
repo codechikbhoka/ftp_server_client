@@ -1,6 +1,6 @@
 #include "functions.h"
 
-bool FTP_Session(unsigned int newsd);
+bool FTP_Session(unsigned int newsd, char CLIENT_HOST_ADDR[]);
 
 int main()  
 {
@@ -24,7 +24,11 @@ int main()
 		if ( (pid=fork()) == 0) 
 		{
 			close(sockid);
-			while(FTP_Session(newsd));
+
+			char* CLIENT_HOST_ADDR = inet_ntoa(client_addr.sin_addr);
+			cout << "FTP Session Initiated For " << CLIENT_HOST_ADDR << endl;
+			while(FTP_Session(newsd, CLIENT_HOST_ADDR));
+			cout << "FTP Session Dropped For " << CLIENT_HOST_ADDR << endl;
 			close (newsd);
 			exit(0);
 		}
@@ -35,8 +39,8 @@ int main()
 	return 0;
 }   
 
-bool FTP_Session(unsigned int newsd)
-{       
+bool FTP_Session(unsigned int newsd, char* CLIENT_HOST_ADDR)
+{      
     int i,fsize,fd,msg_ok,fail,fail1,req,c,ack,pid2;
 
     string command = RecvString(newsd);
@@ -62,32 +66,44 @@ bool FTP_Session(unsigned int newsd)
 	}
 	else if (command == "quit" || command == "exit")
     {
-    	cout << "server: Client Dropped" << endl;
-    	return true;
+    	return false;
     }
 	else if (command == "get")
 	{
 	    string filename = RecvString(newsd);
-	    unsigned int sockdataid;
+	    string ClientRandPort_str = RecvString(newsd);
+	    int ClientRandPort_int = stringTOint(ClientRandPort_str);
+	    int sockdataid;
     	CreateNewSocket(sockdataid);
-		BindSocketToLocalPort(sockdataid,SERVER_DATA_PORT);
-		ConnectToRemote(sockdataid, CLIENT_HOST_ADDR, CLIENT_DATA_PORT);
-		SendFile(sockdataid, filename);
-		printf("server: FILE TRANSFER COMPLETE\n");
-		shutdown(sockdataid,2);
+		int randport = 40000 + rand()%200;
+		BindSocketToLocalPort(sockdataid,randport);
+		cout << CLIENT_HOST_ADDR << " requested file " << filename << endl;
+		cout << "sockdataid  is  "<< sockdataid << endl;
+		ConnectToRemote(sockdataid, CLIENT_HOST_ADDR, ClientRandPort_int);
+
+		FILE* f = fopen(&filename[0],"rb");
+		struct stat st;
+		stat(&filename[0], &st);
+		int size = st.st_size;
+		sendallbinary(sockdataid,f,size);
+		//SendFile(sockdataid, filename);
+		cout << "server: " << filename << " sent to " << CLIENT_HOST_ADDR << endl;
+		close(sockdataid);
 	    
 		return true;
 	}
 	else if (command == "put")
 	{
 		string filename = RecvString(newsd);
+		string ClientRandPort_str = RecvString(newsd);
+		int ClientRandPort_int = stringTOint(ClientRandPort_str);
 		unsigned int sockdataid;
     	CreateNewSocket(sockdataid);
-		BindSocketToLocalPort(sockdataid,SERVER_DATA_PORT);
-		ConnectToRemote(sockdataid, CLIENT_HOST_ADDR, CLIENT_DATA_PORT);
+		int uselessVar = BindSocketToRandomPort(sockdataid);
+		ConnectToRemote(sockdataid, CLIENT_HOST_ADDR, ClientRandPort_int);
 		ReceiveFile(sockdataid, filename);
-		printf("server: FILE TRANSFER COMPLETE\n");
-		shutdown(sockdataid,2);
+		cout << "server: " << CLIENT_HOST_ADDR << " sent file " << filename << endl;
+		close(sockdataid);
 		return true;
 	}
 	else
